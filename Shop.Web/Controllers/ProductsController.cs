@@ -1,22 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Shop.Web.Data;
-using Shop.Web.Data.Entities;
-
-namespace Shop.Web.Controllers
+﻿namespace Shop.Web.Controllers
 {
+    using System.Threading.Tasks;
+    using Data;
+    using Data.Entities;
+    using Helpers;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
+    
     public class ProductsController : Controller
     {
         private readonly IRepository repository;
+        private readonly IUserHelper userHelper;
 
-        public ProductsController(IRepository repository)
+        public ProductsController(IRepository repository, IUserHelper userHelper)
         {
             this.repository = repository;
+            this.userHelper = userHelper;
         }
 
         // GET: Products
@@ -55,9 +54,11 @@ namespace Shop.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-             this.repository.AddProduct(product);
-             await this.repository.SaveAllAsync();
-             return RedirectToAction(nameof(Index));
+                //TODO: change for the logged user
+                product.User = await this.userHelper.GetUserByEmailAsync("malejalgomez@gmail.com");
+                this.repository.AddProduct(product);
+                await this.repository.SaveAllAsync();
+                return RedirectToAction(nameof(Index));
             }
             return View(product);
         }
@@ -83,11 +84,13 @@ namespace Shop.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Product product)
         {
-            
+
             if (ModelState.IsValid)
             {
                 try
                 {
+                    //TODO: change for the logged user
+                    product.User = await this.userHelper.GetUserByEmailAsync("malejalgomez@gmail.com");
                     this.repository.UpdateProduct(product);
                     await this.repository.SaveAllAsync();
                 }
